@@ -31,7 +31,7 @@ def main():
     topic_search = input_wi.get("topic_search", "Business")
 
     # Starts the browser and accesses the website
-    browser = bot.browser.Chrome()
+    browser = bot.browser.Edge()
     browser.searchBrowser("https://www.latimes.com")
     pageTitle = browser.title
 
