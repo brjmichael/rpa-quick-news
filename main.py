@@ -82,7 +82,7 @@ def main():
     if not filtered: bot.logger.info(f"No topic matches the term '{ topic_search }'")
 
     # Filters the 'Sort By' field to display the latest news
-    element = browser.awaits_visibility_element("css selector", Locators.SORT_BY_SELECT, "Visible")
+    element = browser.awaits_presence_element("css selector", Locators.SORT_BY_SELECT, "Visible")
     assert element, f"Element '{ element }' not found"
     browser.select_option(element, "Newest")
     sleep(2)
@@ -94,7 +94,7 @@ def main():
     )
 
     # Get data from the news list
-    element = browser.awaits_visibility_element("css selector", Locators.UL_NEWS, "Visible")
+    element = browser.awaits_presence_element("css selector", Locators.UL_NEWS, "Visible")
     assert element, f"Element '{ element }' not found"
     sleep(2)
 
