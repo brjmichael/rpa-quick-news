@@ -79,6 +79,14 @@ class Browser(ABC):
         except Exception as error:
             bot.logger.error(f"An error occurred: { error }")
 
+    def awaits_presence_element(self, strategy: WEBELEMENT_STRETEGIES, locator: str | Enum, timeout: int = 10) -> WebElement | None:
+        """sets an explicit wait until element is present in the DOM"""
+        locator = locator if isinstance(locator, str) else str(locator.value)
+        try:
+            return WebDriverWait(self, timeout).until(EC.presence_of_element_located( ( strategy, locator) ))
+        except Exception as error:
+            bot.logger.error(f"An error occurred: { error }")
+
     def download_file(self, url: str, alt_extension: ALTERNATIVE_EXTENSIONS = None, download_dir: str = "./output") -> None:
         """Downloads a file from `url`
         - `alt_extension` defines an alternative extension for the file that does not have an extension defined"""
