@@ -82,7 +82,7 @@ def main():
     if not filtered: bot.logger.info(f"No topic matches the term '{ topic_search }'")
 
     # Filters the 'Sort By' field to display the latest news
-    element = browser.awaits_presence_element("css selector", Locators.SORT_BY_SELECT, "Visible")
+    element = browser.awaits_presence_element("css selector", Locators.SORT_BY_SELECT)
     assert element, f"Element '{ element }' not found"
     browser.select_option(element, "Newest")
     sleep(2)
@@ -94,42 +94,53 @@ def main():
     )
 
     # Get data from the news list
-    element = browser.awaits_presence_element("css selector", Locators.UL_NEWS, "Visible")
+    element = browser.awaits_presence_element("css selector", Locators.UL_NEWS)
     assert element, f"Element '{ element }' not found"
     sleep(2)
 
-    try:
-        news_data = []
-        news = element.find_elements(By.TAG_NAME, "li")
-        for item in news:
-            # Get title, date, description and picture filename
-            title = item.find_element(By.CSS_SELECTOR, "h3.promo-title").text
-            date = item.find_element(By.CSS_SELECTOR, "p.promo-timestamp").get_attribute("data-timestamp")
-            description = item.find_element(By.CSS_SELECTOR, "p.promo-description").text
-            
-            try:
-                picture_url = item.find_element(By.CSS_SELECTOR, "img.image").get_attribute("src")
-                picture_filename = bot.utils.filename_from_url(picture_url, ".jpg")
-            except Exception as error:
-                bot.logger.error(f"Unable to download news image ('{ title }') . It probably doesn't have an image")
-                picture_filename = "No image"
+    # List to save news data
+    news_data = []
+    news = element.find_elements(By.TAG_NAME, "li")
 
-            news_data.append ({
-                "Title": title,
-                "Date": bot.utils.timestamp_to_date(float(date)),
-                "Description": description,
-                "Picture filename": picture_filename,
-                "Count search phrase": bot.utils.count_phrase_in_context(search_phrase, [title, description]),
-                "Contains Amount": latimes.amount_checker([title, description])
-            })
+    # Get title, date, description and picture filename
+    for item in news:
+        # Initialize values as None
+        title = None
+        date = None
+        description = None
+        
+        try: title = item.find_element(By.CSS_SELECTOR, "h3.promo-title").text
+        except Exception as error:
+            bot.logger.error(f"Error while obtaining the news title: {error}")
 
-            browser.download_file(picture_url, alt_extension=".jpg")
+        try: date = item.find_element(By.CSS_SELECTOR, "p.promo-timestamp").get_attribute("data-timestamp")
+        except Exception as error:
+            bot.logger.error(f"Error while obtaining the news date: {error}")
 
-        df = pd.DataFrame(news_data)
-        df.to_excel("./output/news.xlsx", index=False)
+        try: description = item.find_element(By.CSS_SELECTOR, "p.promo-description").text
+        except Exception as error:
+            bot.logger.error(f"Error while obtaining the news description: {error}")
+        
+        try:
+            picture_url = item.find_element(By.CSS_SELECTOR, "img.image").get_attribute("src")
+            picture_filename = bot.utils.filename_from_url(picture_url, ".jpg")
+        except Exception as error:
+            bot.logger.error(f"Unable to download news image ('{ title }') . It probably doesn't have an image")
+            picture_filename = "No image"
 
-    except Exception as error:
-       bot.logger.error(f"Error while obtaining the news data: { error }")
+        news_data.append ({
+            "Title": title,
+            "Date": bot.utils.timestamp_to_date(float(date)),
+            "Description": description,
+            "Picture filename": picture_filename,
+            "Count search phrase": bot.utils.count_phrase_in_context(search_phrase, [title, description]),
+            "Contains Amount": latimes.amount_checker([title, description])
+        })
+
+        browser.download_file(picture_url, alt_extension=".jpg")
+
+    df = pd.DataFrame(news_data)
+    df.to_excel("./output/news.xlsx", index=False)
 
 if __name__ == "__main__":
     try:
